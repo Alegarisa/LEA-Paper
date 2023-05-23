@@ -1,0 +1,64 @@
+---
+title: "prelim analyses"
+author: "Alejandra Garcia Isaza"
+date: "2023-05-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(rio)
+library(here)
+library(tidyverse)
+library(haven)
+library(janitor)
+library(knitr)
+library(surveytoolbox)
+library(sjPlot)
+library(kableExtra)
+library(psych)
+library(sjmisc)
+library(MVN)
+
+theme_set(theme_minimal(base_size = 15))
+```
+
+# Loading the dataset
+```{r}
+d <- read_sav(here("nopublish", "LEA Parent W1.2 FINAL.sav"))
+
+d1 <- d %>% 
+  select(-2:-11) %>% 
+  janitor::clean_names() %>%
+  rename(c("id" = "p0001_1"),
+         c("condition" = "e0002_1"),
+         c("site" = "e0003_1")) %>%
+  mutate(id = case_when(id == "XXXX" ~ "PE35", # Assigning id PE35 to data called XXXX
+                        TRUE ~ as.character(id))) %>%
+  mutate(condition = case_when(id == "PE35" ~ "0", # Assigning control condition to id PE35 - participant was not part of intervention groups
+                        TRUE ~ as.character(condition))) %>%
+  mutate(site = case_when(id == "PE35" ~ "1", # Assigning site to Oregon to id PE35 
+                        TRUE ~ as.character(site))) %>%
+  arrange(id)
+
+# d1 <- d1 %>%
+#   mutate(condition = factor(condition),
+#          condition = fct_recode(condition,
+#                            "Control" = "0",
+#                            "Intervention" = "1")) %>%
+#   mutate(site = factor(site),
+#          site = fct_recode(site,
+#                            "Oregon" = "1",
+#                            "Florida" = "2"))
+```
+
+```{r}
+view_df(d1)
+```
+To compare groups on demo vars, I need to separate mothers from fathers, but they don't have the same family id. 
+
+p8011_1	What is the highest level of education you
+completed? (Mark only one)
+
+p8013_1	household income
