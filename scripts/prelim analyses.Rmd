@@ -26,7 +26,9 @@ theme_set(theme_minimal(base_size = 15))
 
 # Loading the dataset
 ```{r}
-d <- read_sav(here("nopublish", "LEA Parent W1.2 FINAL.sav"))
+d <- read_sav(here("nopublish", "LEA Parent W1.2 FINAL.sav")) %>%
+  arrange(P0001.1) 
+
 
 d1 <- d %>% 
   select(-2:-11) %>% 
@@ -34,11 +36,11 @@ d1 <- d %>%
   rename(c("id" = "p0001_1"),
          c("condition" = "e0002_1"),
          c("site" = "e0003_1")) %>%
-  mutate(id = case_when(id == "XXXX" ~ "PE35", # Assigning id PE35 to data called XXXX
+  mutate(id = case_when(id == "XXXX" ~ "PE27", # Assigning id PE27 to row id under XXXX - confirmed with response_id from qualtrics & logs
                         TRUE ~ as.character(id))) %>%
-  mutate(condition = case_when(id == "PE35" ~ "0", # Assigning control condition to id PE35 - participant was not part of intervention groups
+  mutate(condition = case_when(id == "PE27" ~ "0", # Assigning control condition to id PE27 - participant was not part of intervention groups
                         TRUE ~ as.character(condition))) %>%
-  mutate(site = case_when(id == "PE35" ~ "1", # Assigning site to Oregon to id PE35 
+  mutate(site = case_when(id == "PE27" ~ "1", # Assigning site to Oregon to id PE27 
                         TRUE ~ as.character(site))) %>%
   arrange(id)
 
@@ -56,9 +58,173 @@ d1 <- d %>%
 ```{r}
 view_df(d1)
 ```
-To compare groups on demo vars, I need to separate mothers from fathers, but they don't have the same family id. 
+To compare groups on demo vars, I need to separate mothers from fathers, but they don't have the same family id. Here is what I was able to identify:
+
+OREGON
+couples that I remember:
+EUGENE (INT)
+Mother: PE05, Father: PE16
+Mother: PE13, Father: PE08
+
+NOT SURE, SAME LAST NAME, AND DAUGHTER NAME:
+EUGENE (CTRL)
+Mother: PE20, Father: PE22 
+
+FLORIDA
+couples that I remember:
+Miami (INT)
+Mother: PM14, Father: PM17
+
+SAME ADDRESS, SAME DAUGHTER NAME:
+Miami (CTRL)
+Mother: PM16, Father: PM15
+
+approach: include all parents, acknowledge in paper and ask Seth
+
+----
+location_rc_1: location recode
 
 p8011_1	What is the highest level of education you
 completed? (Mark only one)
 
 p8013_1	household income
+
+```{r}
+# ggplot(d1, aes(location_rc_1)) +
+#   geom_bar() 
+#   # facet_wrap(~ condition)
+  
+ggplot(d1, aes(location_rc_1)) +
+  geom_histogram()
+```
+```{r}
+d1 %>%
+  group_by(location_rc_1) %>%
+  summarise(avg_income = mean(p8013_1))
+```
+
+```{r}
+# total = 39 participants
+d_plot_eug <- d1 %>%
+  filter(location_rc_1 == 1) # 22 participants
+
+d_plot_flo <- d1 %>%
+  filter(location_rc_1 == 2) # 10 participants
+
+d_plot_other <- d1 %>%
+  filter(location_rc_1 == 3) # 5 participants
+
+# 2 participants with NA in variable are from Orlando
+```
+is it best to group by west coast/east coast?
+
+Approach: report that roughly participants come from west coast and east coast with a little bit of geographic variability. The purpose was to identify variability by region, but there was the pandemic and people moved or people who were referred gave info for people who met criteria but moved to other cities in the general west coas/east coast
+
+move PE19 to west coast group
+
+```{r}
+ggplot(d_plot_eug, aes(p8011_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) +
+  labs(title = "Parent's Ed. level Oregon",
+       y = "Count",
+       x = "Ed. level")
+
+ggplot(d_plot_eug, aes(p8013_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) +
+  labs(title = "Parent's Income level Oregon",
+       y = "Count",
+       x = "Income level")
+```
+
+```{r}
+ggplot(d_plot_flo, aes(p8011_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) +
+  labs(title = "Parent's Ed. level Florida",
+       y = "Count",
+       x = "Ed. level")
+
+ggplot(d_plot_flo, aes(p8013_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) +
+  labs(title = "Parent's Income. level Florida",
+       y = "Count",
+       x = "Income level")
+```
+
+```{r}
+ggplot(d_plot_other, aes(p8011_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) +
+  labs(title = "Parent's Ed. level Other",
+       y = "Count",
+       x = "Ed. level")
+
+ggplot(d_plot_other, aes(p8013_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) +
+  labs(title = "Parent's Income level Other",
+       y = "Count",
+       x = "Income level")
+```
+```{r}
+# total = 39 participants
+d_plot_west <- d1 %>%
+  filter(site == 1) # 23 participants (12 int & 11 ctrl)
+
+d_plot_east <- d1 %>%
+  filter(site == 2)  # 16 participants (7 int & 9 ctrl)
+```
+
+```{r}
+ggplot(d_plot_west, aes(p8011_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) +
+  labs(title = "Parent's Ed. level West Coast",
+       y = "Count",
+       x = "Ed. level")
+
+ggplot(d_plot_west, aes(p8013_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) +
+  labs(title = "Parent's Income level West Coast",
+       y = "Count",
+       x = "Income level")
+```
+
+```{r}
+ggplot(d_plot_east, aes(p8011_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)) +
+  labs(title = "Parent's Ed. level East Coast",
+       y = "Count",
+       x = "Ed. level")
+
+ggplot(d_plot_east, aes(p8013_1)) +
+  geom_bar() +
+  scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)) +
+  labs(title = "Parent's Income level East Coast",
+       y = "Count",
+       x = "Income level")
+```
+
+For parents: check if there are differences between sites on key variables
+
+IV: Site (West coast/east coast) - grouping var.
+DV: income level range - grouping var.
+Analysis: Chi-square
+
+IV: Site (West coast/east coast) - grouping var.
+DV: educational level - grouping var.
+Analysis: Chi-square
+
+IV: Site (West coast/east coast) - grouping var.
+DV: acculturation - grouping var.
+Analysis:
+
+
+FOR EAs
+
+gender, binge drinking, acculturation, language, attending college, # of jobs, differences, between EAs by site. 
