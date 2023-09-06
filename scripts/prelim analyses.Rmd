@@ -56,6 +56,7 @@ d1 <- d %>%
 ```
 
 ```{r}
+view_df(d)
 view_df(d1)
 ```
 To compare groups on demo vars, I need to separate mothers from fathers, but they don't have the same family id. Here is what I was able to identify:
@@ -169,6 +170,11 @@ ggplot(d_plot_other, aes(p8013_1)) +
        y = "Count",
        x = "Income level")
 ```
+
+
+### Plots by Region ###
+
+
 ```{r}
 # total = 39 participants
 d_plot_west <- d1 %>%
@@ -209,6 +215,18 @@ ggplot(d_plot_east, aes(p8013_1)) +
        y = "Count",
        x = "Income level")
 ```
+```{r}
+ggplot(d_plot_west, aes(p5001_2)) +
+  geom_bar() +
+  labs(title = "Any Alcoholic drink - West Coast")
+
+ggplot(d_plot_east, aes(p5001_2)) +
+  geom_bar() +
+  labs(title = "Any Alcoholic drink - East Coast")
+```
+
+
+p5004_2
 
 For parents: check if there are differences between sites on key variables
 
